@@ -427,6 +427,16 @@ export const testStorageServerApi = async (payload: {
   return data;
 };
 
+export const testStoredStorageServerApi = async (id: string) => {
+  const response = await fetch(`${BACKEND_URL}/api/storage-servers/${id}/test`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Connection test failed");
+  return data;
+};
+
 export const createStorageServerApi = async (payload: Omit<StorageServer, "_id" | "secretAccessKey"> & { secretAccessKey: string }) => {
   const response = await fetch(`${BACKEND_URL}/api/storage-servers`, {
     method: "POST",

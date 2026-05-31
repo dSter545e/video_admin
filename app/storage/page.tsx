@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { FiCheckCircle, FiHardDrive, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiCheckCircle, FiEdit2, FiHardDrive, FiTrash2, FiX } from "react-icons/fi";
 import AdminShell from "../../components/AdminShell";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import {
@@ -9,11 +9,23 @@ import {
   deleteStorageServerApi,
   getStorageServersApi,
   testStorageServerApi,
+  testStoredStorageServerApi,
   updateStorageServerApi,
 } from "../../lib/api";
 import { StorageServer } from "../../lib/types";
 
-const emptyForm = {
+type StorageForm = {
+  name: string;
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucketName: string;
+  publicBaseUrl: string;
+  isDefault: boolean;
+  isActive: boolean;
+};
+
+const emptyForm: StorageForm = {
   name: "",
   accountId: "",
   accessKeyId: "",
@@ -30,13 +42,27 @@ const statusClass = (status?: string) => {
   return "bg-slate-100 text-slate-700";
 };
 
+const serverToForm = (server: StorageServer): StorageForm => ({
+  name: server.name,
+  accountId: server.accountId,
+  accessKeyId: server.accessKeyId,
+  secretAccessKey: "",
+  bucketName: server.bucketName,
+  publicBaseUrl: server.publicBaseUrl || "",
+  isDefault: Boolean(server.isDefault),
+  isActive: server.isActive !== false,
+});
+
 export default function StoragePage() {
   const [servers, setServers] = useState<StorageServer[]>([]);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<StorageForm>(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [testMessage, setTestMessage] = useState("");
+
+  const isEditing = Boolean(editingId);
 
   const load = async () => {
     try {
@@ -51,17 +77,39 @@ export default function StoragePage() {
     void load();
   }, []);
 
+  const resetForm = () => {
+    setForm(emptyForm);
+    setEditingId(null);
+    setTestMessage("");
+    setError("");
+  };
+
+  const startEdit = (server: StorageServer) => {
+    setEditingId(server._id);
+    setForm(serverToForm(server));
+    setTestMessage("");
+    setError("");
+  };
+
   const handleTest = async () => {
     setTesting(true);
     setTestMessage("");
     setError("");
     try {
-      await testStorageServerApi({
-        accountId: form.accountId,
-        accessKeyId: form.accessKeyId,
-        secretAccessKey: form.secretAccessKey,
-        bucketName: form.bucketName,
-      });
+      if (isEditing && editingId && !form.secretAccessKey.trim()) {
+        await testStoredStorageServerApi(editingId);
+      } else {
+        if (!form.secretAccessKey.trim()) {
+          setTestMessage("Secret Access Key is required to test new credentials");
+          return;
+        }
+        await testStorageServerApi({
+          accountId: form.accountId,
+          accessKeyId: form.accessKeyId,
+          secretAccessKey: form.secretAccessKey,
+          bucketName: form.bucketName,
+        });
+      }
       setTestMessage("Connection successful");
     } catch (err) {
       setTestMessage(err instanceof Error ? err.message : "Connection failed");
@@ -75,12 +123,31 @@ export default function StoragePage() {
     setSaving(true);
     setError("");
     try {
-      await createStorageServerApi(form);
-      setForm(emptyForm);
-      setTestMessage("");
+      if (isEditing && editingId) {
+        const payload: Partial<StorageServer> & { secretAccessKey?: string } = {
+          name: form.name,
+          accountId: form.accountId,
+          accessKeyId: form.accessKeyId,
+          bucketName: form.bucketName,
+          publicBaseUrl: form.publicBaseUrl,
+          isDefault: form.isDefault,
+          isActive: form.isActive,
+        };
+        if (form.secretAccessKey.trim()) {
+          payload.secretAccessKey = form.secretAccessKey;
+        }
+        await updateStorageServerApi(editingId, payload);
+      } else {
+        if (!form.secretAccessKey.trim()) {
+          setError("Secret Access Key is required");
+          return;
+        }
+        await createStorageServerApi(form);
+      }
+      resetForm();
       await load();
-    } catch (_error) {
-      setError("Could not save storage server");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save storage server");
     } finally {
       setSaving(false);
     }
@@ -99,9 +166,10 @@ export default function StoragePage() {
   const removeServer = async (id: string) => {
     try {
       await deleteStorageServerApi(id);
+      if (editingId === id) resetForm();
       await load();
-    } catch (_error) {
-      setError("Could not delete storage server");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete storage server");
     }
   };
 
@@ -112,7 +180,16 @@ export default function StoragePage() {
 
         <div className="grid gap-4 xl:grid-cols-2">
           <form onSubmit={handleSubmit} className="admin-card space-y-3 p-5">
-            <h3 className="text-lg font-semibold">Add Cloudflare R2 Server</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-lg font-semibold">
+                {isEditing ? "Edit Cloudflare R2 Server" : "Add Cloudflare R2 Server"}
+              </h3>
+              {isEditing ? (
+                <button type="button" onClick={resetForm} className="admin-btn admin-btn-outline flex items-center gap-1 text-xs">
+                  <FiX /> Cancel
+                </button>
+              ) : null}
+            </div>
             <input
               className="admin-input w-full"
               placeholder="Server name"
@@ -136,11 +213,11 @@ export default function StoragePage() {
             />
             <input
               className="admin-input w-full"
-              placeholder="Secret Access Key"
+              placeholder={isEditing ? "Secret Access Key (leave blank to keep current)" : "Secret Access Key"}
               type="password"
               value={form.secretAccessKey}
               onChange={(e) => setForm({ ...form, secretAccessKey: e.target.value })}
-              required
+              required={!isEditing}
             />
             <input
               className="admin-input w-full"
@@ -163,6 +240,16 @@ export default function StoragePage() {
               />
               Set as default storage
             </label>
+            {isEditing ? (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                />
+                Server is active
+              </label>
+            ) : null}
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -173,7 +260,7 @@ export default function StoragePage() {
                 {testing ? "Testing..." : "Test Connection"}
               </button>
               <button type="submit" disabled={saving} className="admin-btn bg-[var(--admin-brand)] text-white">
-                {saving ? "Saving..." : "Save Server"}
+                {saving ? "Saving..." : isEditing ? "Update Server" : "Save Server"}
               </button>
             </div>
             {testMessage ? (
@@ -190,13 +277,21 @@ export default function StoragePage() {
             </div>
             <div className="space-y-3">
               {servers.map((server) => (
-                <div key={server._id} className="rounded border border-[var(--admin-border)] p-3">
+                <div
+                  key={server._id}
+                  className={`rounded border p-3 ${
+                    editingId === server._id ? "border-[var(--admin-brand)] bg-[var(--admin-brand)]/5" : "border-[var(--admin-border)]"
+                  }`}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium">
-                        {server.name} {server.isDefault ? <span className="text-xs text-[var(--admin-brand)]">(Default)</span> : null}
+                        {server.name}{" "}
+                        {server.isDefault ? <span className="text-xs text-[var(--admin-brand)]">(Default)</span> : null}
+                        {!server.isActive ? <span className="text-xs text-amber-700"> (Disabled)</span> : null}
                       </p>
-                      <p className="admin-muted text-xs">{server.bucketName}</p>
+                      <p className="admin-muted text-xs">Account: {server.accountId}</p>
+                      <p className="admin-muted text-xs">Bucket: {server.bucketName}</p>
                       <p className="admin-muted text-xs">{server.publicBaseUrl || "No public URL"}</p>
                     </div>
                     <span className={`rounded px-2 py-1 text-xs font-semibold uppercase ${statusClass(server.healthStatus)}`}>
@@ -205,6 +300,9 @@ export default function StoragePage() {
                   </div>
                   {server.healthMessage ? <p className="admin-muted mt-2 text-xs">{server.healthMessage}</p> : null}
                   <div className="mt-3 flex flex-wrap gap-2">
+                    <button onClick={() => startEdit(server)} className="admin-btn admin-btn-outline flex items-center gap-1 text-xs">
+                      <FiEdit2 /> Edit
+                    </button>
                     {!server.isDefault ? (
                       <button onClick={() => toggleDefault(server)} className="admin-btn admin-btn-outline text-xs">
                         Make Default
