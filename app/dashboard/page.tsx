@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FiActivity, FiClock, FiEye, FiFilm, FiFolder, FiMessageSquare, FiThumbsUp, FiTrendingUp, FiUsers } from "react-icons/fi";
+import { FiActivity, FiAlertCircle, FiCheckCircle, FiClock, FiEye, FiFilm, FiFolder, FiMessageSquare, FiServer, FiThumbsUp, FiTrendingUp, FiUsers } from "react-icons/fi";
 import AdminShell from "../../components/AdminShell";
 import ProtectedRoute from "../../components/ProtectedRoute";
-import { getAnalyticsSummaryApi, getCategoriesApi, getDashboardStatsApi, getUsersApi, getVideosApi } from "../../lib/api";
-import { AnalyticsSummary, DashboardStats } from "../../lib/types";
+import { getAnalyticsSummaryApi, getCategoriesApi, getDashboardStatsApi, getHealthMonitorApi, getUsersApi, getVideosApi } from "../../lib/api";
+import { AnalyticsSummary, DashboardStats, HealthMonitorSnapshot } from "../../lib/types";
 
 const formatDate = (value?: string) => {
   if (!value) return "--";
@@ -55,17 +55,19 @@ export default function DashboardPage() {
     Array<{ _id: string; title: string; viewsCount?: number; likesCount?: number; commentsCount?: number }>
   >([]);
   const [recentUsers, setRecentUsers] = useState<Array<{ _id: string; name: string; email: string; createdAt: string }>>([]);
+  const [health, setHealth] = useState<HealthMonitorSnapshot | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [statsData, videos, categories, users, analyticsData] = await Promise.all([
+        const [statsData, videos, categories, users, analyticsData, healthData] = await Promise.all([
           getDashboardStatsApi(),
           getVideosApi(),
           getCategoriesApi(),
           getUsersApi(),
           getAnalyticsSummaryApi(),
+          getHealthMonitorApi().catch(() => null),
         ]);
         setStats(statsData);
         setTotalUsers(users.length);
@@ -103,6 +105,7 @@ export default function DashboardPage() {
             }))
         );
         setAnalytics(analyticsData);
+        setHealth(healthData);
       } catch (_error) {
         setError("Unable to load dashboard stats");
       }
@@ -146,6 +149,46 @@ export default function DashboardPage() {
             <h2 className="mt-1 text-3xl font-bold">{totalViews}</h2>
           </div>
         </div>
+
+        {health ? (
+          <div className="mt-4 admin-card p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FiActivity />
+                <h3 className="text-lg font-semibold">System Health (24h Monitor)</h3>
+              </div>
+              <p className="admin-muted text-xs">Last check: {formatDate(health.lastRunAt || undefined)}</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded border border-[var(--admin-border)] p-3">
+                <p className="admin-muted flex items-center gap-1 text-xs">
+                  <FiServer /> R2 Online
+                </p>
+                <p className="mt-1 text-2xl font-bold">
+                  {health.storageSummary.online}/{health.storageSummary.total}
+                </p>
+              </div>
+              <div className="rounded border border-[var(--admin-border)] p-3">
+                <p className="admin-muted flex items-center gap-1 text-xs">
+                  <FiCheckCircle /> Videos Online
+                </p>
+                <p className="mt-1 text-2xl font-bold text-emerald-700">{health.videoSummary.online}</p>
+              </div>
+              <div className="rounded border border-[var(--admin-border)] p-3">
+                <p className="admin-muted flex items-center gap-1 text-xs">
+                  <FiAlertCircle /> Videos Offline
+                </p>
+                <p className="mt-1 text-2xl font-bold text-red-700">{health.videoSummary.offline}</p>
+              </div>
+              <div className="rounded border border-[var(--admin-border)] p-3">
+                <p className="admin-muted flex items-center gap-1 text-xs">
+                  <FiClock /> Checked (24h)
+                </p>
+                <p className="mt-1 text-2xl font-bold">{health.videoSummary.checkedLast24h}</p>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="admin-card p-5">

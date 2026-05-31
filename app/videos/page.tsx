@@ -10,6 +10,13 @@ import { deleteVideoApi, getVideosApi } from "../../lib/api";
 import { USER_APP_URL } from "../../lib/config";
 import { Video } from "../../lib/types";
 
+const healthBadgeClass = (status?: string) => {
+  if (status === "online") return "bg-emerald-100 text-emerald-800";
+  if (status === "offline") return "bg-red-100 text-red-800";
+  if (status === "processing") return "bg-amber-100 text-amber-800";
+  return "bg-slate-100 text-slate-700";
+};
+
 export default function VideosPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [error, setError] = useState("");
@@ -105,6 +112,7 @@ export default function VideosPage() {
                 <th className="px-3 py-3 font-semibold">Title</th>
                 <th className="px-3 py-3 font-semibold">Category</th>
                 <th className="px-3 py-3 font-semibold">Status</th>
+                <th className="px-3 py-3 font-semibold">Health</th>
                 <th className="px-3 py-3 font-semibold">Views</th>
                 <th className="px-3 py-3 font-semibold">Reactions</th>
                 <th className="px-3 py-3 font-semibold">Comments</th>
@@ -143,6 +151,14 @@ export default function VideosPage() {
                           : video.processingStatus === "ready"
                             ? "public"
                             : video.processingStatus || "draft"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3">
+                    <span
+                      className={`rounded px-2 py-1 text-xs font-semibold uppercase ${healthBadgeClass(video.healthStatus)}`}
+                      title={video.healthMessage || ""}
+                    >
+                      {video.healthStatus || "unknown"}
                     </span>
                   </td>
                   <td className="admin-muted px-3 py-3">{video.viewsCount || 0}</td>

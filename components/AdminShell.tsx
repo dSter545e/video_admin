@@ -16,6 +16,8 @@ import {
   FiUsers,
   FiMenu,
   FiX,
+  FiActivity,
+  FiHardDrive,
 } from "react-icons/fi";
 import { clearAdminSession } from "../lib/config";
 import AdminThemeToggle from "./AdminThemeToggle";
@@ -35,6 +37,8 @@ const navLinks = [
   { href: "/categories/add", label: "Add Category", icon: FiPlusCircle },
   { href: "/users", label: "Users", icon: FiUsers },
   { href: "/analytics", label: "Analytics", icon: FiBarChart2 },
+  { href: "/health", label: "Health Monitor", icon: FiActivity },
+  { href: "/storage", label: "Storage", icon: FiHardDrive },
   { href: "/removal-requests", label: "Moderation", icon: FiAlertTriangle },
   { href: "/backups", label: "Backups", icon: FiArchive },
 ];

@@ -2,7 +2,7 @@ import { BACKEND_URL, getAdminToken } from "./config";
 import {
   AdminUser,
   AnalyticsSummary,
-  BackupItem,
+  BackupsResponse,
   Category,
   DashboardStats,
   LoginResponse,
@@ -11,6 +11,8 @@ import {
   VideoComment,
   VideoFormPayload,
   VideoRemovalRequest,
+  HealthMonitorSnapshot,
+  StorageServer,
 } from "./types";
 import toast from "react-hot-toast";
 
@@ -299,7 +301,7 @@ export const getAnalyticsSummaryApi = async (): Promise<AnalyticsSummary> => {
   return response.json();
 };
 
-export const getBackupsApi = async (): Promise<BackupItem[]> => {
+export const getBackupsApi = async (): Promise<BackupsResponse> => {
   const response = await fetch(`${BACKEND_URL}/api/backups`, {
     cache: "no-store",
     headers: { Authorization: `Bearer ${getAdminToken()}` },
@@ -373,4 +375,97 @@ export const deleteRemovalRequestApi = async (id: string) => {
     throw new Error("Failed to delete removal request");
   }
   toast.success("Removal request deleted");
+};
+
+export const getHealthMonitorApi = async (): Promise<HealthMonitorSnapshot> => {
+  const response = await fetch(`${BACKEND_URL}/api/health-monitor`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Failed to load health monitor");
+  return data;
+};
+
+export const runHealthMonitorApi = async (): Promise<HealthMonitorSnapshot> => {
+  const response = await fetch(`${BACKEND_URL}/api/health-monitor/run`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Health check failed");
+    throw new Error(data.error || "Health check failed");
+  }
+  toast.success("Health check completed");
+  return data;
+};
+
+export const getStorageServersApi = async (): Promise<StorageServer[]> => {
+  const response = await fetch(`${BACKEND_URL}/api/storage-servers`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Failed to load storage servers");
+  return data;
+};
+
+export const testStorageServerApi = async (payload: {
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucketName: string;
+}) => {
+  const response = await fetch(`${BACKEND_URL}/api/storage-servers/test`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Connection test failed");
+  return data;
+};
+
+export const createStorageServerApi = async (payload: Omit<StorageServer, "_id" | "secretAccessKey"> & { secretAccessKey: string }) => {
+  const response = await fetch(`${BACKEND_URL}/api/storage-servers`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to create storage server");
+    throw new Error(data.error || "Failed to create storage server");
+  }
+  toast.success("Storage server added");
+  return data;
+};
+
+export const updateStorageServerApi = async (id: string, payload: Partial<StorageServer>) => {
+  const response = await fetch(`${BACKEND_URL}/api/storage-servers/${id}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to update storage server");
+    throw new Error(data.error || "Failed to update storage server");
+  }
+  toast.success("Storage server updated");
+  return data;
+};
+
+export const deleteStorageServerApi = async (id: string) => {
+  const response = await fetch(`${BACKEND_URL}/api/storage-servers/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({} as { error?: string }));
+    toast.error(data.error || "Failed to delete storage server");
+    throw new Error(data.error || "Failed to delete storage server");
+  }
+  toast.success("Storage server deleted");
 };

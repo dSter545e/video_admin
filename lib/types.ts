@@ -77,6 +77,55 @@ export type Video = {
     name: string;
     imageUrl?: string;
   };
+  healthStatus?: "online" | "offline" | "processing" | "unknown";
+  healthCheckedAt?: string;
+  healthMessage?: string;
+};
+
+export type HealthMonitorSnapshot = {
+  lastRunAt?: string | null;
+  nextRunAt?: string | null;
+  durationMs?: number;
+  storageSummary: { total: number; online: number; offline: number };
+  videoSummary: {
+    total: number;
+    online: number;
+    offline: number;
+    processing: number;
+    skipped: number;
+    checkedLast24h: number;
+  };
+  storageServers: Array<{
+    serverId?: string | null;
+    name: string;
+    bucketName: string;
+    status: "online" | "offline" | "unknown";
+    message: string;
+    checkedAt?: string;
+  }>;
+  offlineVideos: Array<{
+    videoId: string;
+    shortId?: string;
+    title: string;
+    status: string;
+    message: string;
+    checkedAt?: string;
+  }>;
+};
+
+export type StorageServer = {
+  _id: string;
+  name: string;
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucketName: string;
+  publicBaseUrl?: string;
+  isDefault?: boolean;
+  isActive?: boolean;
+  healthStatus?: "online" | "offline" | "unknown";
+  healthCheckedAt?: string;
+  healthMessage?: string;
 };
 
 export type LoginResponse = {
@@ -96,6 +145,28 @@ export type BackupItem = {
   key: string;
   size: number;
   lastModified: string | null;
+};
+
+export type BackupStatus = {
+  firstRunAt: string | null;
+  lastRunAt: string | null;
+  lastSuccessAt: string | null;
+  nextRunAt: string | null;
+  lastInitiatedBy: string;
+  lastStatus: "success" | "failure" | "unknown";
+  lastError: string;
+  lastBackupKey: string;
+  totalRuns: number;
+  totalBackupFiles: number;
+  firstBackupFileAt: string | null;
+  lastBackupFileAt: string | null;
+  autoBackupEnabled: boolean;
+  intervalHours: number;
+};
+
+export type BackupsResponse = {
+  items: BackupItem[];
+  status: BackupStatus;
 };
 
 export type VideoFormPayload = {
