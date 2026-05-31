@@ -4,7 +4,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
-import { FiAlertTriangle, FiArchive, FiBarChart2, FiChevronDown, FiFilm, FiFolder, FiGrid, FiLogOut, FiPlusCircle, FiUsers } from "react-icons/fi";
+import {
+  FiAlertTriangle,
+  FiArchive,
+  FiBarChart2,
+  FiFilm,
+  FiFolder,
+  FiGrid,
+  FiLogOut,
+  FiPlusCircle,
+  FiUsers,
+  FiMenu,
+  FiX,
+} from "react-icons/fi";
 import { clearAdminSession } from "../lib/config";
 import AdminThemeToggle from "./AdminThemeToggle";
 
@@ -15,150 +27,133 @@ type AdminShellProps = {
   actionHref?: string;
 };
 
-const linkGroups = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    items: [{ href: "/dashboard", label: "Dashboard", icon: FiGrid }],
-  },
-  {
-    id: "video",
-    label: "Video",
-    items: [
-      { href: "/videos", label: "Video List", icon: FiFilm },
-      { href: "/videos/add", label: "Add Video", icon: FiPlusCircle },
-    ],
-  },
-  {
-    id: "category",
-    label: "Category",
-    items: [
-      { href: "/categories", label: "Category List", icon: FiFolder },
-      { href: "/categories/add", label: "Add Category", icon: FiPlusCircle },
-    ],
-  },
-  {
-    id: "users",
-    label: "Users",
-    items: [{ href: "/users", label: "User List", icon: FiUsers }],
-  },
-  {
-    id: "analytics",
-    label: "Analytics",
-    items: [{ href: "/analytics", label: "Analytics", icon: FiBarChart2 }],
-  },
-  {
-    id: "moderation",
-    label: "Moderation",
-    items: [{ href: "/removal-requests", label: "Removal Requests", icon: FiAlertTriangle }],
-  },
-  {
-    id: "backup",
-    label: "Backup",
-    items: [{ href: "/backups", label: "Backups", icon: FiArchive }],
-  },
+const navLinks = [
+  { href: "/dashboard", label: "Dashboard", icon: FiGrid },
+  { href: "/videos", label: "Videos", icon: FiFilm },
+  { href: "/videos/add", label: "Add Video", icon: FiPlusCircle },
+  { href: "/categories", label: "Categories", icon: FiFolder },
+  { href: "/categories/add", label: "Add Category", icon: FiPlusCircle },
+  { href: "/users", label: "Users", icon: FiUsers },
+  { href: "/analytics", label: "Analytics", icon: FiBarChart2 },
+  { href: "/removal-requests", label: "Moderation", icon: FiAlertTriangle },
+  { href: "/backups", label: "Backups", icon: FiArchive },
 ];
 
 export default function AdminShell({ title, children, actionLabel, actionHref }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [logoUnavailable, setLogoUnavailable] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    clearAdminSession();
+    router.push("/login");
+  };
 
   return (
-    <main className="admin-layout min-h-screen">
-      <aside className="admin-sidebar fixed left-0 top-0 z-40 hidden h-screen w-[260px] border-r border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 lg:block">
-        <div className="mb-6 flex items-center gap-2 border-b border-[var(--admin-border)] pb-4">
-          {logoUnavailable ? (
-            <p className="text-sm font-semibold">xHub4u</p>
-          ) : (
-            <div className="flex h-[42px] w-[162px] items-center justify-center">
-              <Image
-                src="/logo.png"
-                alt="xHub4u logo"
-                width={270}
-                height={70}
-                className="w-full object-contain"
-                style={{ height: "auto" }}
-                onError={() => setLogoUnavailable(true)}
-              />
-            </div>
-          )}
-        </div>
-        <nav className="space-y-3">
-          {linkGroups.map((group) => (
-            <details key={group.id} open className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-muted)] p-2">
-              <summary className="flex cursor-pointer list-none items-center justify-between px-2 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--admin-muted)]">
-                {group.label}
-                <FiChevronDown className="text-sm" />
-              </summary>
-              <div className="mt-2 space-y-1">
-                {group.items.map((link) => {
-                  const Icon = link.icon;
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
-                        pathname === link.href ? "bg-[var(--admin-brand)] text-white" : "admin-chip"
-                      }`}
-                    >
-                      <Icon className="text-base" />
-                      <span>{link.label}</span>
-                    </Link>
-                  );
-                })}
+    <div className="min-h-screen bg-[var(--admin-background)]">
+      <header className="sticky top-0 z-40 w-full border-b border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-sm">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3 sm:px-6">
+          <Link href="/dashboard" className="flex shrink-0 items-center">
+            {logoUnavailable ? (
+              <span className="text-xl font-bold tracking-tight text-[var(--admin-brand)]">xHub4u Admin</span>
+            ) : (
+              <div className="flex h-[36px] w-[140px] items-center justify-start">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={140}
+                  height={36}
+                  className="w-full object-contain"
+                  style={{ height: "auto" }}
+                  onError={() => setLogoUnavailable(true)}
+                />
               </div>
-            </details>
-          ))}
-        </nav>
-      </aside>
-
-      <section className="admin-main lg:ml-[260px]">
-        <header className="admin-topbar sticky top-0 z-30 border-b border-[var(--admin-border)] bg-[var(--admin-surface)]/95 px-3 py-3 backdrop-blur sm:px-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-xl font-bold sm:text-2xl">{title}</h1>
-            <div className="flex items-center gap-2">
-              {actionLabel && actionHref ? (
-                <Link href={actionHref} className="admin-btn bg-[var(--admin-accent)] text-white hover:brightness-95">
-                  {actionLabel}
-                </Link>
-              ) : null}
-              <AdminThemeToggle />
-              <button
-                onClick={() => {
-                  clearAdminSession();
-                  router.push("/login");
-                }}
-                className="admin-btn flex items-center gap-2 bg-red-600 text-white hover:bg-red-700"
-              >
-                <FiLogOut />
-                Logout
-              </button>
-            </div>
+            )}
+          </Link>
+          <div className="flex items-center gap-3">
+            <AdminThemeToggle />
+            <button
+              onClick={handleLogout}
+              className="admin-btn flex items-center gap-2 bg-red-600 text-white hover:bg-red-700"
+            >
+              <FiLogOut /> <span className="hidden sm:inline">Logout</span>
+            </button>
+            <button
+              className="rounded border border-[var(--admin-border)] p-2 hover:bg-[var(--admin-surface-muted)] lg:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <FiX className="text-lg" /> : <FiMenu className="text-lg" />}
+            </button>
           </div>
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-            {linkGroups.flatMap((group) =>
-              group.items.map((link) => {
+        </div>
+
+        {/* Desktop Navigation */}
+        <div className="hidden border-t border-[var(--admin-border)] bg-[var(--admin-surface-muted)] lg:block">
+          <div className="mx-auto flex max-w-[1600px] items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6 no-scrollbar">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-[var(--admin-brand)] text-white shadow-sm"
+                      : "text-[var(--admin-muted)] hover:bg-[var(--admin-surface)] hover:text-[var(--admin-foreground)]"
+                  }`}
+                >
+                  <Icon className="text-base" />
+                  <span className="whitespace-nowrap">{link.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="border-t border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 py-4 lg:hidden shadow-md">
+            <nav className="flex flex-col gap-1">
+              {navLinks.map((link) => {
                 const Icon = link.icon;
-                const active = pathname === link.href;
+                const isActive = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`inline-flex shrink-0 items-center gap-1 rounded px-3 py-2 text-xs font-medium ${
-                      active ? "bg-[var(--admin-brand)] text-white" : "admin-chip"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium ${
+                      isActive
+                        ? "bg-[var(--admin-brand)] text-white"
+                        : "text-[var(--admin-foreground)] hover:bg-[var(--admin-surface-muted)]"
                     }`}
                   >
-                    <Icon className="text-sm" />
+                    <Icon className="text-base" />
                     <span>{link.label}</span>
                   </Link>
                 );
-              })
-            )}
+              })}
+            </nav>
           </div>
-        </header>
-        <div className="px-3 py-4 sm:px-6">{children}</div>
-      </section>
-    </main>
+        )}
+      </header>
+
+      <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold text-[var(--admin-foreground)] sm:text-3xl">{title}</h1>
+          {actionLabel && actionHref && (
+            <Link
+              href={actionHref}
+              className="admin-btn bg-[var(--admin-accent)] text-white shadow hover:brightness-95"
+            >
+              {actionLabel}
+            </Link>
+          )}
+        </div>
+        <div className="min-h-[60vh]">{children}</div>
+      </main>
+    </div>
   );
 }

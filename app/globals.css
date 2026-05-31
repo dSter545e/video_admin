@@ -105,3 +105,11 @@ button {
   background: linear-gradient(90deg, #3b82f6, #2b5cab);
   transition: width 0.2s ease;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

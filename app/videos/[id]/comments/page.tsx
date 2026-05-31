@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import AdminShell from "../../../../../components/AdminShell";
-import ProtectedRoute from "../../../../../components/ProtectedRoute";
-import { getVideoByIdApi, getVideoCommentsApi } from "../../../../../lib/api";
-import { Video, VideoComment } from "../../../../../lib/types";
+import AdminShell from "../../../../components/AdminShell";
+import ProtectedRoute from "../../../../components/ProtectedRoute";
+import { getVideoByIdApi, getVideoCommentsApi } from "../../../../lib/api";
+import { Video, VideoComment } from "../../../../lib/types";
 
 const formatDate = (value?: string) => {
   if (!value) return "--";

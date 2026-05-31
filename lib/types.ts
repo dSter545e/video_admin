@@ -46,6 +46,7 @@ export type Category = {
 
 export type Video = {
   _id: string;
+  videoId?: string;
   title: string;
   slug?: string;
   description: string;

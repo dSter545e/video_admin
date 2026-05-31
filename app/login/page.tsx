@@ -20,9 +20,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      console.log("[ADMIN_LOGIN_DEBUG] submitting login", { email });
       const data = await loginAdminApi(email, password);
-      console.log("[ADMIN_LOGIN_DEBUG] login response", { status: 200, ok: true, data });
 
       clearAdminSession();
       localStorage.setItem("admin_token", data.token);
@@ -30,7 +28,6 @@ export default function LoginPage() {
       setMessage(`Welcome ${data.admin?.name || "Admin"}`);
       router.push("/dashboard");
     } catch (error) {
-      console.error("[ADMIN_LOGIN_DEBUG] login failed", error);
       setError("Invalid login credentials");
     } finally {
       setLoading(false);

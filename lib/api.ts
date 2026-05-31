@@ -143,8 +143,13 @@ export const deleteCategoryApi = async (id: string) => {
   toast.success("Category deleted");
 };
 
-export const getVideosApi = async (): Promise<Video[]> => {
-  const response = await fetch(`${BACKEND_URL}/api/videos/admin/all`, {
+export const getVideosApi = async (params?: { q?: string }): Promise<Video[]> => {
+  const query = new URLSearchParams();
+  if (params?.q?.trim()) {
+    query.set("q", params.q.trim());
+  }
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  const response = await fetch(`${BACKEND_URL}/api/videos/admin/all${suffix}`, {
     cache: "no-store",
     headers: { Authorization: `Bearer ${getAdminToken()}` },
   });

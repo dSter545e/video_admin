@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { FiEdit2, FiEye, FiMessageSquare, FiThumbsDown, FiThumbsUp, FiTrash2 } from "react-icons/fi";
+import { FormEvent, useEffect, useState } from "react";
+import { FiEdit2, FiEye, FiMessageSquare, FiSearch, FiThumbsDown, FiThumbsUp, FiTrash2 } from "react-icons/fi";
 import AdminShell from "../../components/AdminShell";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { deleteVideoApi, getVideosApi } from "../../lib/api";
@@ -15,30 +15,43 @@ export default function VideosPage() {
   const [error, setError] = useState("");
   const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearch, setActiveSearch] = useState<string | null>(null);
   const itemsPerPage = 30;
 
-  const loadAll = async () => {
-    const videosData = await getVideosApi();
+  const loadAll = async (search?: string | null) => {
+    const videosData = await getVideosApi(search ? { q: search } : undefined);
     setVideos(videosData);
   };
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void loadAll();
+      void loadAll(activeSearch);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [activeSearch]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [videos.length]);
+  }, [videos.length, activeSearch]);
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const q = searchQuery.trim();
+    setActiveSearch(q || null);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setActiveSearch(null);
+  };
 
   const deleteVideo = async (id: string) => {
     if (deletingVideoId === id) return;
     setDeletingVideoId(id);
     try {
       await deleteVideoApi(id);
-      await loadAll();
+      await loadAll(activeSearch);
     } catch (_error) {
       setError("Could not delete video");
     } finally {
@@ -60,10 +73,34 @@ export default function VideosPage() {
       <AdminShell title="Video List" actionLabel="Add Video" actionHref="/videos/add">
         {error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
 
+        <form onSubmit={handleSearch} className="admin-card mb-4 flex flex-wrap items-end gap-3 p-4">
+          <div className="min-w-[220px] flex-1">
+            <label className="admin-muted mb-1 block text-xs font-semibold uppercase">Search</label>
+            <div className="relative">
+              <FiSearch className="admin-muted pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Video ID, title, or category"
+                className="admin-input w-full py-2 pl-9 pr-3"
+              />
+            </div>
+          </div>
+          <button type="submit" className="admin-btn bg-blue-600 text-white">
+            Search
+          </button>
+          {activeSearch ? (
+            <button type="button" onClick={clearSearch} className="admin-btn">
+              Clear
+            </button>
+          ) : null}
+        </form>
+
         <div className="admin-card overflow-x-auto p-3">
-          <table className="admin-table w-full min-w-[760px] text-left text-sm">
+          <table className="admin-table w-full min-w-[860px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--admin-border)]">
+                <th className="px-3 py-3 font-semibold">ID</th>
                 <th className="px-3 py-3 font-semibold">Thumbnail</th>
                 <th className="px-3 py-3 font-semibold">Title</th>
                 <th className="px-3 py-3 font-semibold">Category</th>
@@ -80,6 +117,7 @@ export default function VideosPage() {
             <tbody>
               {paginatedVideos.map((video) => (
                 <tr key={video._id} className="border-b border-[var(--admin-border)] last:border-b-0">
+                  <td className="admin-muted px-3 py-3 font-mono text-xs">{video.videoId || "--"}</td>
                   <td className="px-3 py-3">
                     {video.thumbnail ? (
                       <Image
