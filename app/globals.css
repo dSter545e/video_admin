@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+:root {
+  --admin-background: #eef3fb;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #f7f9fc;
+  --admin-border: #d8e0ee;
+  --admin-foreground: #24334d;
+  --admin-muted: #6e7f9b;
+  --admin-brand: #2b5cab;
+  --admin-accent: #ff8b25;
+}
+
+@theme inline {
+  --color-background: var(--admin-background);
+  --color-foreground: var(--admin-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root[data-admin-theme="dark"] {
+  --admin-background: #111827;
+  --admin-surface: #1f2937;
+  --admin-surface-muted: #283548;
+  --admin-border: #334155;
+  --admin-foreground: #f3f4f6;
+  --admin-muted: #cbd5e1;
+  --admin-brand: #3b82f6;
+}
+
+body {
+  background: var(--admin-background);
+  color: var(--admin-foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  cursor: pointer;
+}
+
+.admin-page {
+  background: var(--admin-background);
+  color: var(--admin-foreground);
+}
+
+.admin-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  box-shadow: 0 6px 18px rgba(72, 100, 145, 0.1);
+}
+
+.admin-input {
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-surface-muted);
+  color: var(--admin-foreground);
+  padding: 0.75rem;
+  outline: none;
+}
+
+.admin-btn {
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.admin-btn-outline {
+  border: 1px solid var(--admin-border);
+  color: var(--admin-foreground);
+  background: var(--admin-surface-muted);
+}
+
+.admin-chip {
+  background: var(--admin-surface-muted);
+  color: var(--admin-brand);
+  border: 1px solid var(--admin-border);
+}
+
+.admin-muted {
+  color: var(--admin-muted);
+}
+
+.admin-table th {
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.admin-progress-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--admin-surface-muted);
+  border: 1px solid var(--admin-border);
+  overflow: hidden;
+}
+
+.admin-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3b82f6, #2b5cab);
+  transition: width 0.2s ease;
+}
