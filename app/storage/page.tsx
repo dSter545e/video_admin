@@ -190,6 +190,11 @@ export default function StoragePage() {
                 </button>
               ) : null}
             </div>
+            <p className="admin-muted text-xs leading-relaxed">
+              Create an R2 API token in Cloudflare → R2 → Manage R2 API Tokens. Use{" "}
+              <strong>Object Read &amp; Write</strong> scoped to your bucket (or Admin Read &amp; Write). Copy Account
+              ID from the R2 overview page and bucket name exactly as shown in the dashboard.
+            </p>
             <input
               className="admin-input w-full"
               placeholder="Server name"

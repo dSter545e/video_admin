@@ -221,3 +221,37 @@ export type VideoRemovalRequest = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type AdSlotMeta = {
+  id: string;
+  label: string;
+  placementType: "fixed" | "in_feed" | "video" | "popup";
+  pages: string[];
+  defaultInFeedEvery?: number;
+  defaultSkipAfterSeconds?: number;
+  defaultPopupDelaySeconds?: number;
+  defaultPopupCooldownMinutes?: number;
+};
+
+export type AdItem = {
+  _id: string;
+  name: string;
+  slot: string;
+  type: "html" | "image" | "video";
+  htmlContent: string;
+  imageUrl: string;
+  videoUrl: string;
+  linkUrl: string;
+  altText: string;
+  pages: string[];
+  inFeedEvery: number;
+  skipAfterSeconds: number;
+  popupDelaySeconds: number;
+  popupCooldownMinutes: number;
+  priority: number;
+  isActive: boolean;
+  startAt?: string | null;
+  endAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};

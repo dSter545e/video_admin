@@ -13,6 +13,8 @@ import {
   VideoRemovalRequest,
   HealthMonitorSnapshot,
   StorageServer,
+  AdItem,
+  AdSlotMeta,
 } from "./types";
 import toast from "react-hot-toast";
 
@@ -478,4 +480,63 @@ export const deleteStorageServerApi = async (id: string) => {
     throw new Error(data.error || "Failed to delete storage server");
   }
   toast.success("Storage server deleted");
+};
+
+export const getAdSlotsMetaApi = async (): Promise<{ slots: AdSlotMeta[]; pages: string[] }> => {
+  const response = await fetch(`${BACKEND_URL}/api/ads/slots`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Failed to load ad slots");
+  return response.json();
+};
+
+export const getAdsAdminApi = async (): Promise<AdItem[]> => {
+  const response = await fetch(`${BACKEND_URL}/api/ads/admin/all`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Failed to load ads");
+  return data;
+};
+
+export const createAdApi = async (payload: Omit<AdItem, "_id" | "createdAt" | "updatedAt">) => {
+  const response = await fetch(`${BACKEND_URL}/api/ads/admin`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to create ad");
+    throw new Error(data.error || "Failed to create ad");
+  }
+  toast.success("Ad created");
+  return data;
+};
+
+export const updateAdApi = async (id: string, payload: Partial<AdItem>) => {
+  const response = await fetch(`${BACKEND_URL}/api/ads/admin/${id}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to update ad");
+    throw new Error(data.error || "Failed to update ad");
+  }
+  toast.success("Ad updated");
+  return data;
+};
+
+export const deleteAdApi = async (id: string) => {
+  const response = await fetch(`${BACKEND_URL}/api/ads/admin/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({} as { error?: string }));
+    toast.error(data.error || "Failed to delete ad");
+    throw new Error(data.error || "Failed to delete ad");
+  }
+  toast.success("Ad deleted");
 };

@@ -12,12 +12,12 @@ import {
   FiFolder,
   FiGrid,
   FiLogOut,
-  FiPlusCircle,
   FiUsers,
   FiMenu,
   FiX,
   FiActivity,
   FiHardDrive,
+  FiRadio,
 } from "react-icons/fi";
 import { clearAdminSession } from "../lib/config";
 import AdminThemeToggle from "./AdminThemeToggle";
@@ -32,13 +32,12 @@ type AdminShellProps = {
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: FiGrid },
   { href: "/videos", label: "Videos", icon: FiFilm },
-  { href: "/videos/add", label: "Add Video", icon: FiPlusCircle },
   { href: "/categories", label: "Categories", icon: FiFolder },
-  { href: "/categories/add", label: "Add Category", icon: FiPlusCircle },
   { href: "/users", label: "Users", icon: FiUsers },
   { href: "/analytics", label: "Analytics", icon: FiBarChart2 },
   { href: "/health", label: "Health Monitor", icon: FiActivity },
   { href: "/storage", label: "Storage", icon: FiHardDrive },
+  { href: "/ads", label: "Ads", icon: FiRadio },
   { href: "/removal-requests", label: "Moderation", icon: FiAlertTriangle },
   { href: "/backups", label: "Backups", icon: FiArchive },
 ];
@@ -92,7 +91,6 @@ export default function AdminShell({ title, children, actionLabel, actionHref }:
           </div>
         </div>
 
-        {/* Desktop Navigation */}
         <div className="hidden border-t border-[var(--admin-border)] bg-[var(--admin-surface-muted)] lg:block">
           <div className="mx-auto flex max-w-[1600px] items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6 no-scrollbar">
             {navLinks.map((link) => {
@@ -116,7 +114,6 @@ export default function AdminShell({ title, children, actionLabel, actionHref }:
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="border-t border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 py-4 lg:hidden shadow-md">
             <nav className="flex flex-col gap-1">
