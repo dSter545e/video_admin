@@ -14,6 +14,7 @@ import {
   HealthMonitorSnapshot,
   StorageServer,
   AdItem,
+  AdDeviceMeta,
   AdSlotMeta,
 } from "./types";
 import toast from "react-hot-toast";
@@ -482,7 +483,11 @@ export const deleteStorageServerApi = async (id: string) => {
   toast.success("Storage server deleted");
 };
 
-export const getAdSlotsMetaApi = async (): Promise<{ slots: AdSlotMeta[]; pages: string[] }> => {
+export const getAdSlotsMetaApi = async (): Promise<{
+  slots: AdSlotMeta[];
+  pages: string[];
+  devices: AdDeviceMeta[];
+}> => {
   const response = await fetch(`${BACKEND_URL}/api/ads/slots`, { cache: "no-store" });
   if (!response.ok) throw new Error("Failed to load ad slots");
   return response.json();

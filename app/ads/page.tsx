@@ -22,6 +22,13 @@ const PAGE_OPTIONS = [
   { id: "search", label: "Search" },
 ];
 
+const DEVICE_OPTIONS = [
+  { id: "all", label: "All screens" },
+  { id: "desktop", label: "Desktop (large)" },
+  { id: "tablet", label: "Tablet (medium)" },
+  { id: "mobile", label: "Mobile (small)" },
+];
+
 const emptyForm = {
   name: "",
   slot: "header_leaderboard",
@@ -32,6 +39,7 @@ const emptyForm = {
   linkUrl: "",
   altText: "Advertisement",
   pages: ["all"] as string[],
+  devices: ["all"] as string[],
   inFeedEvery: 10,
   skipAfterSeconds: 5,
   popupDelaySeconds: 5,
@@ -84,6 +92,7 @@ export default function AdsPage() {
       linkUrl: ad.linkUrl || "",
       altText: ad.altText || "Advertisement",
       pages: ad.pages?.length ? ad.pages : ["all"],
+      devices: ad.devices?.length ? ad.devices : ["all"],
       inFeedEvery: ad.inFeedEvery || 10,
       skipAfterSeconds: ad.skipAfterSeconds ?? 5,
       popupDelaySeconds: ad.popupDelaySeconds ?? 5,
@@ -105,6 +114,16 @@ export default function AdsPage() {
     });
   };
 
+  const toggleDevice = (deviceId: string) => {
+    setForm((prev) => {
+      const has = prev.devices.includes(deviceId);
+      if (deviceId === "all") return { ...prev, devices: ["all"] };
+      const withoutAll = prev.devices.filter((device) => device !== "all");
+      const next = has ? withoutAll.filter((device) => device !== deviceId) : [...withoutAll, deviceId];
+      return { ...prev, devices: next.length ? next : ["all"] };
+    });
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -120,6 +139,7 @@ export default function AdsPage() {
         linkUrl: form.linkUrl,
         altText: form.altText,
         pages: form.pages,
+        devices: form.devices,
         inFeedEvery: form.inFeedEvery,
         skipAfterSeconds: form.skipAfterSeconds,
         popupDelaySeconds: form.popupDelaySeconds,
@@ -282,6 +302,27 @@ export default function AdsPage() {
               </div>
             </div>
 
+            <div>
+              <p className="mb-2 text-sm font-medium">Show on devices</p>
+              <div className="flex flex-wrap gap-2">
+                {DEVICE_OPTIONS.map((device) => (
+                  <button
+                    key={device.id}
+                    type="button"
+                    onClick={() => toggleDevice(device.id)}
+                    className={`rounded px-3 py-1 text-xs ${
+                      form.devices.includes(device.id) ? "bg-[var(--admin-brand)] text-white" : "admin-btn-outline"
+                    }`}
+                  >
+                    {device.label}
+                  </button>
+                ))}
+              </div>
+              <p className="admin-muted mt-1 text-xs">
+                Desktop ≥1024px · Tablet 768–1023px · Mobile &lt;768px (viewport width).
+              </p>
+            </div>
+
             {selectedSlotMeta?.placementType === "in_feed" ? (
               <input
                 type="number"
@@ -386,7 +427,8 @@ export default function AdsPage() {
                       <p className="font-medium">{ad.name}</p>
                       <p className="admin-muted text-xs">{slotLabel(ad.slot)}</p>
                       <p className="admin-muted text-xs">
-                        {ad.type.toUpperCase()} · Pages: {(ad.pages || ["all"]).join(", ")} · Priority {ad.priority}
+                        {ad.type.toUpperCase()} · Pages: {(ad.pages || ["all"]).join(", ")} · Devices:{" "}
+                        {(ad.devices || ["all"]).join(", ")} · Priority {ad.priority}
                       </p>
                     </div>
                     <span

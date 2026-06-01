@@ -222,6 +222,11 @@ export type VideoRemovalRequest = {
   updatedAt: string;
 };
 
+export type AdDeviceMeta = {
+  id: string;
+  label: string;
+};
+
 export type AdSlotMeta = {
   id: string;
   label: string;
@@ -244,6 +249,7 @@ export type AdItem = {
   linkUrl: string;
   altText: string;
   pages: string[];
+  devices: string[];
   inFeedEvery: number;
   skipAfterSeconds: number;
   popupDelaySeconds: number;
