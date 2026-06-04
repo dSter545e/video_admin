@@ -135,13 +135,16 @@ export default function AddVideoPage() {
             <option value="draft">Draft</option>
           </select>
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium">Thumbnail Image</label>
+            <label className="mb-1 block text-sm font-medium">Thumbnail Image (optional)</label>
             <input
               type="file"
               accept="image/*"
               className="admin-input w-full"
               onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
             />
+            <p className="admin-muted mt-1 text-xs">
+              Leave empty to auto-generate a thumbnail from the uploaded video after processing.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <label className="mb-1 block text-sm font-medium">Video File</label>

@@ -148,13 +148,16 @@ export default function EditVideoPage() {
                 className="mb-2 h-24 w-40 rounded object-cover"
               />
             ) : null}
-            <label className="mb-1 block text-sm font-medium">Upload New Thumbnail</label>
+            <label className="mb-1 block text-sm font-medium">Upload New Thumbnail (optional)</label>
             <input
               type="file"
               accept="image/*"
               className="admin-input w-full"
               onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
             />
+            <p className="admin-muted mt-1 text-xs">
+              Skip to keep the current thumbnail. Videos without one use an auto-generated frame from the video file.
+            </p>
           </div>
           <textarea
             className="admin-input sm:col-span-2"
