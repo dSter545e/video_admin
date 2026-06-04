@@ -154,7 +154,10 @@ export default function AddVideoPage() {
               className="admin-input w-full"
               onChange={(event) => setVideoFile(event.target.files?.[0] || null)}
             />
-            <p className="admin-muted mt-1 text-xs">Will generate 144p to max (up to 1080p) and upload to Cloudflare R2.</p>
+            <p className="admin-muted mt-1 text-xs">
+              Supports large files (up to 1GB). Upload may take several minutes on slow connections — keep this tab open until
+              progress reaches 100%.
+            </p>
           </div>
           <textarea
             className="admin-input sm:col-span-2"

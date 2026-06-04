@@ -18,6 +18,7 @@ import {
   AdSlotMeta,
 } from "./types";
 import toast from "react-hot-toast";
+import { postVideoUploadForm } from "./uploadVideo";
 
 const authHeaders = () => {
   const token = getAdminToken();
@@ -189,40 +190,11 @@ export const createProcessedVideoApi = async (
     formData.append("thumbnailImage", payload.thumbnailImageFile);
   }
 
-  await new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${BACKEND_URL}/api/videos/process-upload`);
-    xhr.setRequestHeader("Authorization", `Bearer ${getAdminToken()}`);
-
-    xhr.upload.onprogress = (event) => {
-      if (!payload.onUploadProgress || !event.lengthComputable) return;
-      const percent = Math.round((event.loaded / event.total) * 100);
-      payload.onUploadProgress(percent);
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        payload.onUploadProgress?.(100);
-        toast.success("Video uploaded");
-        resolve();
-        return;
-      }
-      let errorMessage = "Failed to process and upload video";
-      try {
-        const data = JSON.parse(xhr.responseText || "{}");
-        errorMessage = data.error || errorMessage;
-      } catch (_error) {
-        // keep default message
-      }
-      reject(new Error(errorMessage));
-    };
-
-    xhr.onerror = () => {
-      reject(new Error("Upload failed due to network error"));
-    };
-
-    xhr.send(formData);
+  await postVideoUploadForm({
+    formData,
+    onUploadProgress: payload.onUploadProgress,
   });
+  toast.success("Video uploaded");
 };
 
 export const updateVideoApi = async (
