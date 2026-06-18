@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import {
   FiAlertTriangle,
   FiArchive,
@@ -18,6 +18,7 @@ import {
   FiActivity,
   FiHardDrive,
   FiRadio,
+  FiImage,
 } from "react-icons/fi";
 import { clearAdminSession } from "../lib/config";
 import AdminThemeToggle from "./AdminThemeToggle";
@@ -29,132 +30,189 @@ type AdminShellProps = {
   actionHref?: string;
 };
 
-const navLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: FiGrid },
-  { href: "/videos", label: "Videos", icon: FiFilm },
-  { href: "/categories", label: "Categories", icon: FiFolder },
-  { href: "/users", label: "Users", icon: FiUsers },
-  { href: "/analytics", label: "Analytics", icon: FiBarChart2 },
-  { href: "/health", label: "Health Monitor", icon: FiActivity },
-  { href: "/storage", label: "Storage", icon: FiHardDrive },
-  { href: "/ads", label: "Ads", icon: FiRadio },
-  { href: "/removal-requests", label: "Moderation", icon: FiAlertTriangle },
-  { href: "/backups", label: "Backups", icon: FiArchive },
+type NavLink = {
+  href: string;
+  label: string;
+  icon: typeof FiGrid;
+};
+
+type NavSection = {
+  title: string;
+  links: NavLink[];
+};
+
+const navSections: NavSection[] = [
+  {
+    title: "Overview",
+    links: [{ href: "/dashboard", label: "Dashboard", icon: FiGrid }],
+  },
+  {
+    title: "Content",
+    links: [
+      { href: "/videos", label: "Videos", icon: FiFilm },
+      { href: "/categories", label: "Categories", icon: FiFolder },
+    ],
+  },
+  {
+    title: "Audience",
+    links: [
+      { href: "/users", label: "Users", icon: FiUsers },
+      { href: "/analytics", label: "Analytics", icon: FiBarChart2 },
+    ],
+  },
+  {
+    title: "Platform",
+    links: [
+      { href: "/health", label: "Health Monitor", icon: FiActivity },
+      { href: "/storage", label: "Storage", icon: FiHardDrive },
+      { href: "/ads", label: "Ads", icon: FiRadio },
+      { href: "/watermark", label: "Watermark", icon: FiImage },
+      { href: "/removal-requests", label: "Moderation", icon: FiAlertTriangle },
+      { href: "/backups", label: "Backups", icon: FiArchive },
+    ],
+  },
 ];
+
+const isNavActive = (pathname: string, href: string) => {
+  if (href === "/dashboard") {
+    return pathname === "/dashboard";
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+};
 
 export default function AdminShell({ title, children, actionLabel, actionHref }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [logoUnavailable, setLogoUnavailable] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sidebarOpen]);
 
   const handleLogout = () => {
     clearAdminSession();
     router.push("/login");
   };
 
+  const renderNav = () =>
+    navSections.map((section) => (
+      <div key={section.title} className="admin-sidebar__section">
+        <p className="admin-sidebar__section-title">{section.title}</p>
+        <nav className="admin-sidebar__nav">
+          {section.links.map((link) => {
+            const Icon = link.icon;
+            const active = isNavActive(pathname, link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setSidebarOpen(false)}
+                className={`admin-sidebar__link ${active ? "admin-sidebar__link--active" : ""}`}
+              >
+                <Icon className="admin-sidebar__link-icon" aria-hidden />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    ));
+
   return (
-    <div className="min-h-screen bg-[var(--admin-background)]">
-      <header className="sticky top-0 z-40 w-full border-b border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-sm">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/dashboard" className="flex shrink-0 items-center">
+    <div className="admin-layout">
+      {sidebarOpen ? (
+        <button
+          type="button"
+          className="admin-sidebar-backdrop lg:hidden"
+          aria-label="Close menu"
+          onClick={() => setSidebarOpen(false)}
+        />
+      ) : null}
+
+      <aside className={`admin-sidebar ${sidebarOpen ? "admin-sidebar--open" : ""}`}>
+        <div className="admin-sidebar__header">
+          <Link href="/dashboard" className="admin-sidebar__brand" onClick={() => setSidebarOpen(false)}>
             {logoUnavailable ? (
-              <span className="text-xl font-bold tracking-tight text-[var(--admin-brand)]">xHub4u Admin</span>
+              <span className="admin-sidebar__brand-text">xHub4u Admin</span>
             ) : (
-              <div className="flex h-[36px] w-[140px] items-center justify-start">
+              <div className="admin-sidebar__logo-wrap">
                 <Image
                   src="/logo.png"
-                  alt="Logo"
-                  width={140}
-                  height={36}
-                  className="w-full object-contain"
+                  alt="xHub4u Admin"
+                  width={132}
+                  height={34}
+                  className="admin-sidebar__logo"
                   style={{ height: "auto" }}
                   onError={() => setLogoUnavailable(true)}
                 />
               </div>
             )}
           </Link>
-          <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="admin-sidebar__close lg:hidden"
+            aria-label="Close menu"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <FiX />
+          </button>
+        </div>
+
+        <div className="admin-sidebar__scroll">{renderNav()}</div>
+
+        <div className="admin-sidebar__footer">
+          <div className="admin-sidebar__footer-actions">
             <AdminThemeToggle />
-            <button
-              onClick={handleLogout}
-              className="admin-btn flex items-center gap-2 bg-red-600 text-white hover:bg-red-700"
-            >
-              <FiLogOut /> <span className="hidden sm:inline">Logout</span>
-            </button>
-            <button
-              className="rounded border border-[var(--admin-border)] p-2 hover:bg-[var(--admin-surface-muted)] lg:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <FiX className="text-lg" /> : <FiMenu className="text-lg" />}
+            <button type="button" onClick={handleLogout} className="admin-sidebar__logout">
+              <FiLogOut aria-hidden />
+              <span>Logout</span>
             </button>
           </div>
         </div>
+      </aside>
 
-        <div className="hidden border-t border-[var(--admin-border)] bg-[var(--admin-surface-muted)] lg:block">
-          <div className="mx-auto flex max-w-[1600px] items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6 no-scrollbar">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[var(--admin-brand)] text-white shadow-sm"
-                      : "text-[var(--admin-muted)] hover:bg-[var(--admin-surface)] hover:text-[var(--admin-foreground)]"
-                  }`}
-                >
-                  <Icon className="text-base" />
-                  <span className="whitespace-nowrap">{link.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="border-t border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 py-4 lg:hidden shadow-md">
-            <nav className="flex flex-col gap-1">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium ${
-                      isActive
-                        ? "bg-[var(--admin-brand)] text-white"
-                        : "text-[var(--admin-foreground)] hover:bg-[var(--admin-surface-muted)]"
-                    }`}
-                  >
-                    <Icon className="text-base" />
-                    <span>{link.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-        )}
-      </header>
-
-      <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-[var(--admin-foreground)] sm:text-3xl">{title}</h1>
-          {actionLabel && actionHref && (
-            <Link
-              href={actionHref}
-              className="admin-btn bg-[var(--admin-accent)] text-white shadow hover:brightness-95"
+      <div className="admin-main">
+        <header className="admin-topbar">
+          <div className="admin-topbar__left">
+            <button
+              type="button"
+              className="admin-topbar__menu lg:hidden"
+              aria-label="Open menu"
+              onClick={() => setSidebarOpen(true)}
             >
-              {actionLabel}
-            </Link>
-          )}
-        </div>
-        <div className="min-h-[60vh]">{children}</div>
-      </main>
+              <FiMenu />
+            </button>
+            <h1 className="admin-topbar__title">{title}</h1>
+          </div>
+          <div className="admin-topbar__actions">
+            {actionLabel && actionHref ? (
+              <Link href={actionHref} className="admin-btn bg-[var(--admin-accent)] text-white shadow hover:brightness-95">
+                {actionLabel}
+              </Link>
+            ) : null}
+            <div className="admin-topbar__mobile-tools lg:hidden">
+              <AdminThemeToggle />
+              <button type="button" onClick={handleLogout} className="admin-topbar__logout" aria-label="Logout">
+                <FiLogOut />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="admin-content">
+          <div className="admin-content__inner">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

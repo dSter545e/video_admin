@@ -16,6 +16,7 @@ import {
   AdItem,
   AdDeviceMeta,
   AdSlotMeta,
+  WatermarkSettings,
 } from "./types";
 import toast from "react-hot-toast";
 import { postVideoUploadForm } from "./uploadVideo";
@@ -180,7 +181,7 @@ export const createProcessedVideoApi = async (
   formData.append("slug", payload.slug || "");
   formData.append("description", payload.description);
   formData.append("thumbnail", payload.thumbnail || "");
-  formData.append("categoryId", payload.categoryId);
+  formData.append("categoryId", payload.categoryId || "");
   formData.append("status", payload.status || "public");
   for (const tag of payload.tags || []) {
     formData.append("tags[]", tag);
@@ -207,7 +208,7 @@ export const updateVideoApi = async (
   formData.append("description", payload.description);
   formData.append("thumbnail", payload.thumbnail || "");
   formData.append("videoUrl", payload.videoUrl || "");
-  formData.append("categoryId", payload.categoryId);
+  formData.append("categoryId", payload.categoryId || "");
   formData.append("status", payload.status || "public");
   for (const tag of payload.tags || []) {
     formData.append("tags[]", tag);
@@ -516,4 +517,60 @@ export const deleteAdApi = async (id: string) => {
     throw new Error(data.error || "Failed to delete ad");
   }
   toast.success("Ad deleted");
+};
+
+export const getWatermarkSettingsApi = async (): Promise<WatermarkSettings> => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/watermark`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Failed to load watermark settings");
+  return data.watermark;
+};
+
+export const updateWatermarkSettingsApi = async (payload: Partial<WatermarkSettings>) => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/watermark`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to save watermark settings");
+    throw new Error(data.error || "Failed to save watermark settings");
+  }
+  toast.success("Watermark settings saved");
+  return data.watermark as WatermarkSettings;
+};
+
+export const uploadWatermarkLogoApi = async (file: File): Promise<WatermarkSettings> => {
+  const formData = new FormData();
+  formData.append("logo", file);
+  const response = await fetch(`${BACKEND_URL}/api/settings/watermark/logo`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to upload watermark logo");
+    throw new Error(data.error || "Failed to upload watermark logo");
+  }
+  toast.success("Watermark logo uploaded");
+  return data.watermark as WatermarkSettings;
+};
+
+export const removeWatermarkLogoApi = async (): Promise<WatermarkSettings> => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/watermark/logo`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to remove watermark logo");
+    throw new Error(data.error || "Failed to remove watermark logo");
+  }
+  toast.success("Watermark logo removed");
+  return data.watermark as WatermarkSettings;
 };

@@ -46,9 +46,6 @@ export default function AddVideoPage() {
       try {
         const data = await getCategoriesApi();
         setCategories(data);
-        if (data[0]?._id) {
-          setForm((prev) => ({ ...prev, categoryId: data[0]._id }));
-        }
       } catch (_error) {
         setError("Failed to load categories");
       }
@@ -113,18 +110,21 @@ export default function AddVideoPage() {
               setForm({ ...form, slug: toSlug(event.target.value) });
             }}
           />
-          <select
-            className="admin-input"
-            value={form.categoryId}
-            onChange={(event) => setForm({ ...form, categoryId: event.target.value })}
-          >
-            <option value="">Select category</option>
-            {categories.map((category) => (
-              <option key={category._id} value={category._id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Category (optional)</label>
+            <select
+              className="admin-input w-full"
+              value={form.categoryId}
+              onChange={(event) => setForm({ ...form, categoryId: event.target.value })}
+            >
+              <option value="">No category</option>
+              {categories.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <select
             className="admin-input"
             value={form.status || "public"}

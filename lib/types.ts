@@ -175,7 +175,7 @@ export type VideoFormPayload = {
   description: string;
   thumbnail?: string;
   videoUrl?: string;
-  categoryId: string;
+  categoryId?: string;
   status?: "public" | "private" | "draft";
   tags?: string[];
 };
@@ -185,7 +185,7 @@ export type ProcessedVideoUploadPayload = {
   slug?: string;
   description: string;
   thumbnail?: string;
-  categoryId: string;
+  categoryId?: string;
   videoFile: File;
   status?: "public" | "private" | "draft";
   tags?: string[];
@@ -260,4 +260,14 @@ export type AdItem = {
   endAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type WatermarkSettings = {
+  enabled: boolean;
+  mode: "text" | "logo";
+  text: string;
+  logoUrl: string;
+  logoKey: string;
+  opacity: number;
+  margin: number;
 };

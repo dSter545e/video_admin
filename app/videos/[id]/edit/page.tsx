@@ -116,18 +116,21 @@ export default function EditVideoPage() {
               setForm({ ...form, slug: toSlug(event.target.value) });
             }}
           />
-          <select
-            className="admin-input"
-            value={form.categoryId}
-            onChange={(event) => setForm({ ...form, categoryId: event.target.value })}
-          >
-            <option value="">Select category</option>
-            {categories.map((category) => (
-              <option key={category._id} value={category._id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Category (optional)</label>
+            <select
+              className="admin-input w-full"
+              value={form.categoryId}
+              onChange={(event) => setForm({ ...form, categoryId: event.target.value })}
+            >
+              <option value="">No category</option>
+              {categories.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <select
             className="admin-input"
             value={form.status}
