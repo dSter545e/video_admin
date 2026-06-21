@@ -7,7 +7,7 @@ import AdminShell from "../../../../components/AdminShell";
 import ProtectedRoute from "../../../../components/ProtectedRoute";
 import TagInput from "../../../../components/TagInput";
 import { getCategoriesApi, getVideoByIdApi, suggestVideoTagsApi, updateVideoApi } from "../../../../lib/api";
-import { Category } from "../../../../lib/types";
+import { Category, Video } from "../../../../lib/types";
 
 const toSlug = (value: string) =>
   value
@@ -36,41 +36,56 @@ export default function EditVideoPage() {
   const [form, setForm] = useState(initialForm);
   const [categories, setCategories] = useState<Category[]>([]);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [videoMeta, setVideoMeta] = useState<Video | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
 
+  const loadVideo = async () => {
+    const video = await getVideoByIdApi(id);
+    setVideoMeta(video);
+    setForm({
+      title: video.title || "",
+      slug: video.slug || toSlug(video.title || ""),
+      description: video.description || "",
+      thumbnail: video.thumbnail || "",
+      categoryId: video.category?._id || "",
+      tags: (video.tags || []).map((tag) => tag.displayName),
+      status:
+        video.processingStatus === "processing"
+          ? ((video.finalStatus === "active"
+              ? "public"
+              : video.finalStatus === "inactive"
+                ? "private"
+                : video.finalStatus) || "public")
+          : (((video.processingStatus === "active"
+              ? "public"
+              : video.processingStatus === "inactive"
+                ? "private"
+                : video.processingStatus) as "public" | "private" | "draft") || "public"),
+    });
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
-        const [video, categoriesData] = await Promise.all([getVideoByIdApi(id), getCategoriesApi()]);
+        const categoriesData = await getCategoriesApi();
         setCategories(categoriesData);
-        setForm({
-          title: video.title || "",
-          slug: video.slug || toSlug(video.title || ""),
-          description: video.description || "",
-          thumbnail: video.thumbnail || "",
-          categoryId: video.category?._id || "",
-          tags: (video.tags || []).map((tag) => tag.displayName),
-          status:
-            video.processingStatus === "processing"
-              ? ((video.finalStatus === "active"
-                  ? "public"
-                  : video.finalStatus === "inactive"
-                    ? "private"
-                    : video.finalStatus) || "public")
-              : (((video.processingStatus === "active"
-                  ? "public"
-                  : video.processingStatus === "inactive"
-                    ? "private"
-                    : video.processingStatus) as "public" | "private" | "draft") || "public"),
-        });
+        await loadVideo();
       } catch (_error) {
         setError("Failed to load video details");
       }
     };
     load();
   }, [id, router]);
+
+  useEffect(() => {
+    if (videoMeta?.processingStatus !== "processing") return;
+    const interval = window.setInterval(() => {
+      void loadVideo().catch(() => undefined);
+    }, 8000);
+    return () => window.clearInterval(interval);
+  }, [id, videoMeta?.processingStatus]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -151,16 +166,13 @@ export default function EditVideoPage() {
                 className="mb-2 h-24 w-40 rounded object-cover"
               />
             ) : null}
-            <label className="mb-1 block text-sm font-medium">Upload New Thumbnail (optional)</label>
+            <label className="mb-1 block text-sm font-medium">Thumbnail</label>
             <input
               type="file"
               accept="image/*"
               className="admin-input w-full"
               onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
             />
-            <p className="admin-muted mt-1 text-xs">
-              Skip to keep the current thumbnail. Videos without one use an auto-generated frame from the video file.
-            </p>
           </div>
           <textarea
             className="admin-input sm:col-span-2"
@@ -182,6 +194,7 @@ export default function EditVideoPage() {
             {loading ? "Updating..." : "Update Video"}
           </button>
         </form>
+
         {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
       </AdminShell>
     </ProtectedRoute>

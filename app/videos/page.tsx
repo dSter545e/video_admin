@@ -42,6 +42,15 @@ export default function VideosPage() {
     setCurrentPage(1);
   }, [videos.length, activeSearch]);
 
+  useEffect(() => {
+    const hasProcessing = videos.some((video) => video.processingStatus === "processing");
+    if (!hasProcessing) return;
+    const interval = window.setInterval(() => {
+      void loadAll(activeSearch);
+    }, 8000);
+    return () => window.clearInterval(interval);
+  }, [videos, activeSearch]);
+
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const q = searchQuery.trim();
@@ -190,7 +199,9 @@ export default function VideosPage() {
                       : "Pending"}
                   </td>
                   <td className="admin-muted px-3 py-3">
-                    {video.durationSeconds ? `${Math.round(video.durationSeconds)}s` : "--"}
+                    {video.durationSeconds
+                      ? `${Math.floor(video.durationSeconds / 60)}:${String(Math.floor(video.durationSeconds % 60)).padStart(2, "0")}`
+                      : "--"}
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex gap-2">
@@ -240,43 +251,30 @@ export default function VideosPage() {
           <p className="admin-muted text-sm">
             Page {safeCurrentPage} of {totalPages} | Total Videos: {videos.length}
           </p>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
-              className="admin-btn admin-btn-outline disabled:opacity-60"
+              type="button"
+              className="admin-btn disabled:opacity-50"
               disabled={safeCurrentPage <= 1}
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
             >
               Previous
             </button>
-            {pageWindowStart > 1 ? (
-              <>
-                <button className="admin-btn admin-btn-outline" onClick={() => setCurrentPage(1)}>
-                  1
-                </button>
-                {pageWindowStart > 2 ? <span className="admin-muted px-1 text-sm">...</span> : null}
-              </>
-            ) : null}
             {pageNumbers.map((pageNumber) => (
               <button
                 key={pageNumber}
-                className={`admin-btn ${pageNumber === safeCurrentPage ? "bg-[var(--admin-brand)] text-white" : "admin-btn-outline"}`}
+                type="button"
+                className={`admin-btn ${pageNumber === safeCurrentPage ? "bg-blue-600 text-white" : ""}`}
                 onClick={() => setCurrentPage(pageNumber)}
               >
                 {pageNumber}
               </button>
             ))}
-            {pageWindowEnd < totalPages ? (
-              <>
-                {pageWindowEnd < totalPages - 1 ? <span className="admin-muted px-1 text-sm">...</span> : null}
-                <button className="admin-btn admin-btn-outline" onClick={() => setCurrentPage(totalPages)}>
-                  {totalPages}
-                </button>
-              </>
-            ) : null}
             <button
-              className="admin-btn admin-btn-outline disabled:opacity-60"
+              type="button"
+              className="admin-btn disabled:opacity-50"
               disabled={safeCurrentPage >= totalPages}
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
             >
               Next
             </button>
