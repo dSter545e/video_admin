@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import AdminShell from "../../../components/AdminShell";
 import ProtectedRoute from "../../../components/ProtectedRoute";
 import SeoFieldsSection, { emptySeoFields } from "../../../components/SeoFieldsSection";
-import { createCategoryApi } from "../../../lib/api";
+import { createPageApi } from "../../../lib/api";
 import { SeoFieldsInput } from "../../../lib/types";
 
 const toSlug = (value: string) =>
@@ -19,13 +19,14 @@ const toSlug = (value: string) =>
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-export default function AddCategoryPage() {
+export default function AddPagePage() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [featured, setFeatured] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [path, setPath] = useState("");
+  const [content, setContent] = useState("");
+  const [status, setStatus] = useState<"published" | "draft">("draft");
   const [seo, setSeo] = useState<SeoFieldsInput>(emptySeoFields);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,10 +36,10 @@ export default function AddCategoryPage() {
     setError("");
     setLoading(true);
     try {
-      await createCategoryApi({ name, slug, imageUrl: "", featured, imageFile, seo });
-      router.push("/categories");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not create category");
+      await createPageApi({ title, slug, path, content, status, seo });
+      router.push("/pages");
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Could not create page");
     } finally {
       setLoading(false);
     }
@@ -46,57 +47,59 @@ export default function AddCategoryPage() {
 
   return (
     <ProtectedRoute>
-      <AdminShell title="Add Category">
+      <AdminShell title="Add Page">
         <form onSubmit={onSubmit} className="admin-card grid gap-4 p-6 sm:grid-cols-2">
           <input
             className="admin-input"
-            placeholder="Category Name"
-            value={name}
+            placeholder="Page Title"
+            value={title}
             onChange={(event) => {
               const value = event.target.value;
-              setName(value);
+              setTitle(value);
               if (!slugEdited) setSlug(toSlug(value));
             }}
           />
           <input
             className="admin-input"
-            placeholder="Slug (auto-generated)"
+            placeholder="Slug"
             value={slug}
             onChange={(event) => {
               setSlugEdited(true);
               setSlug(toSlug(event.target.value));
             }}
           />
-          <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium">Category Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              className="admin-input w-full"
-              onChange={(event) => setImageFile(event.target.files?.[0] || null)}
-            />
-          </div>
-          <label className="sm:col-span-2 inline-flex items-center gap-2 text-sm font-medium">
-            <input
-              type="checkbox"
-              checked={featured}
-              onChange={(event) => setFeatured(event.target.checked)}
-              className="h-4 w-4"
-            />
-            Feature this category on homepage (max 6)
-          </label>
+          <input
+            className="admin-input sm:col-span-2"
+            placeholder="Custom path (optional, e.g. /privacy-policy or /pages/about-us)"
+            value={path}
+            onChange={(event) => setPath(event.target.value)}
+          />
+          <select
+            className="admin-input sm:col-span-2"
+            value={status}
+            onChange={(event) => setStatus(event.target.value as "published" | "draft")}
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+          <textarea
+            className="admin-input min-h-56 sm:col-span-2"
+            placeholder="Page content (HTML allowed)"
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+          />
           <SeoFieldsSection
             value={seo}
             onChange={setSeo}
-            fallbackTitle={name}
-            fallbackDescription={`Watch ${name} videos`}
+            fallbackTitle={title}
+            fallbackDescription={content.slice(0, 160)}
           />
           <button
             type="submit"
             disabled={loading}
             className="admin-btn bg-[var(--admin-brand)] text-white disabled:opacity-50 sm:col-span-2"
           >
-            {loading ? "Saving..." : "Save Category"}
+            {loading ? "Saving..." : "Save Page"}
           </button>
         </form>
         {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}

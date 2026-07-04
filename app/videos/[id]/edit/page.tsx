@@ -6,8 +6,9 @@ import Image from "next/image";
 import AdminShell from "../../../../components/AdminShell";
 import ProtectedRoute from "../../../../components/ProtectedRoute";
 import TagInput from "../../../../components/TagInput";
+import SeoFieldsSection, { emptySeoFields, seoFromRecord } from "../../../../components/SeoFieldsSection";
 import { getCategoriesApi, getVideoByIdApi, suggestVideoTagsApi, updateVideoApi } from "../../../../lib/api";
-import { Category, Video } from "../../../../lib/types";
+import { Category, SeoFieldsInput, Video } from "../../../../lib/types";
 
 const toSlug = (value: string) =>
   value
@@ -37,6 +38,7 @@ export default function EditVideoPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [videoMeta, setVideoMeta] = useState<Video | null>(null);
+  const [seo, setSeo] = useState<SeoFieldsInput>(emptySeoFields);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
@@ -64,6 +66,7 @@ export default function EditVideoPage() {
                 ? "private"
                 : video.processingStatus) as "public" | "private" | "draft") || "public"),
     });
+    setSeo(seoFromRecord(video.seo));
   };
 
   useEffect(() => {
@@ -96,6 +99,7 @@ export default function EditVideoPage() {
       await updateVideoApi(id, {
         ...form,
         thumbnailImageFile: thumbnailFile,
+        seo,
       });
       router.push("/videos");
     } catch (error) {
@@ -185,6 +189,12 @@ export default function EditVideoPage() {
             onChange={(tags) => setForm({ ...form, tags })}
             placeholder="Add tags (Enter or comma)"
             fetchSuggestions={suggestVideoTagsApi}
+          />
+          <SeoFieldsSection
+            value={seo}
+            onChange={setSeo}
+            fallbackTitle={form.title}
+            fallbackDescription={form.description}
           />
           <button
             type="submit"

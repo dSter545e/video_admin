@@ -19,6 +19,8 @@ import {
   FiHardDrive,
   FiRadio,
   FiImage,
+  FiFileText,
+  FiSearch,
 } from "react-icons/fi";
 import { clearAdminSession } from "../lib/config";
 import AdminThemeToggle from "./AdminThemeToggle";
@@ -51,6 +53,7 @@ const navSections: NavSection[] = [
     links: [
       { href: "/videos", label: "Videos", icon: FiFilm },
       { href: "/categories", label: "Categories", icon: FiFolder },
+      { href: "/pages", label: "Pages", icon: FiFileText },
     ],
   },
   {
@@ -66,6 +69,7 @@ const navSections: NavSection[] = [
       { href: "/health", label: "Health Monitor", icon: FiActivity },
       { href: "/storage", label: "Storage", icon: FiHardDrive },
       { href: "/ads", label: "Ads", icon: FiRadio },
+      { href: "/site-settings", label: "Site Settings", icon: FiSearch },
       { href: "/watermark", label: "Watermark", icon: FiImage },
       { href: "/removal-requests", label: "Moderation", icon: FiAlertTriangle },
       { href: "/backups", label: "Backups", icon: FiArchive },

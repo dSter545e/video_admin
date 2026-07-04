@@ -233,7 +233,7 @@ export default function StoragePage() {
             />
             <input
               className="admin-input w-full"
-              placeholder="Public base URL (https://pub-xxx.r2.dev)"
+              placeholder="Public base URL (https://media.yourdomain.com — match MEDIA_CDN_URL)"
               value={form.publicBaseUrl}
               onChange={(e) => setForm({ ...form, publicBaseUrl: e.target.value })}
             />

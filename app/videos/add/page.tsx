@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AdminShell from "../../../components/AdminShell";
 import ProtectedRoute from "../../../components/ProtectedRoute";
 import TagInput from "../../../components/TagInput";
+import SeoFieldsSection, { emptySeoFields } from "../../../components/SeoFieldsSection";
 import ThumbnailPicker from "../../../components/ThumbnailPicker";
 import { createProcessedVideoApi, getCategoriesApi, suggestVideoTagsApi } from "../../../lib/api";
 import {
@@ -13,7 +14,7 @@ import {
   localThumbnailOptionToFile,
   LocalThumbnailOption,
 } from "../../../lib/videoThumbnailOptions";
-import { Category, VideoFormPayload } from "../../../lib/types";
+import { Category, SeoFieldsInput, VideoFormPayload } from "../../../lib/types";
 
 const toSlug = (value: string) =>
   value
@@ -72,6 +73,7 @@ export default function AddVideoPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState<VideoFormPayload>(initialVideo);
+  const [seo, setSeo] = useState<SeoFieldsInput>(emptySeoFields);
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [thumbnailByFileKey, setThumbnailByFileKey] = useState<Record<string, VideoThumbnailState>>({});
   const thumbnailByFileKeyRef = useRef<Record<string, VideoThumbnailState>>({});
@@ -203,6 +205,7 @@ export default function AddVideoPage() {
         categoryId: sharedForm.categoryId,
         status: sharedForm.status || "public",
         tags: sharedForm.tags || [],
+        seo,
         videoFile: item.file,
         thumbnailImageFile,
         onUploadProgress: (percent) => {
@@ -435,6 +438,12 @@ export default function AddVideoPage() {
             onChange={(tags) => setForm({ ...form, tags })}
             placeholder="Add tags (Enter or comma)"
             fetchSuggestions={suggestVideoTagsApi}
+          />
+          <SeoFieldsSection
+            value={seo}
+            onChange={setSeo}
+            fallbackTitle={form.title}
+            fallbackDescription={form.description}
           />
           <button
             type="submit"

@@ -17,9 +17,27 @@ import {
   AdDeviceMeta,
   AdSlotMeta,
   WatermarkSettings,
+  SiteSeoSettings,
+  SiteBrandingSettings,
+  CmsPage,
+  SeoFieldsInput,
 } from "./types";
 import toast from "react-hot-toast";
 import { postVideoUploadForm } from "./uploadVideo";
+
+const appendSeoToFormData = (formData: FormData, seo?: SeoFieldsInput) => {
+  if (!seo) return;
+  formData.append("metaTitle", seo.metaTitle || "");
+  formData.append("metaDescription", seo.metaDescription || "");
+  formData.append("metaKeywords", seo.metaKeywords || "");
+  formData.append("ogTitle", seo.ogTitle || "");
+  formData.append("ogDescription", seo.ogDescription || "");
+  formData.append("ogImage", seo.ogImage || "");
+  formData.append("noindex", seo.noindex ? "true" : "false");
+  if (seo.ogImageFile) {
+    formData.append("ogImageFile", seo.ogImageFile);
+  }
+};
 
 const authHeaders = () => {
   const token = getAdminToken();
@@ -63,12 +81,14 @@ export const createCategoryApi = async (payload: {
   imageUrl: string;
   featured?: boolean;
   imageFile?: File | null;
+  seo?: SeoFieldsInput;
 }) => {
   const formData = new FormData();
   formData.append("name", payload.name);
   formData.append("slug", payload.slug || "");
   formData.append("imageUrl", payload.imageUrl || "");
   formData.append("featured", payload.featured ? "true" : "false");
+  appendSeoToFormData(formData, payload.seo);
   if (payload.imageFile) {
     formData.append("image", payload.imageFile);
   }
@@ -88,13 +108,21 @@ export const createCategoryApi = async (payload: {
 
 export const updateCategoryApi = async (
   id: string,
-  payload: { name: string; slug?: string; imageUrl: string; featured?: boolean; imageFile?: File | null }
+  payload: {
+    name: string;
+    slug?: string;
+    imageUrl: string;
+    featured?: boolean;
+    imageFile?: File | null;
+    seo?: SeoFieldsInput;
+  }
 ) => {
   const formData = new FormData();
   formData.append("name", payload.name);
   formData.append("slug", payload.slug || "");
   formData.append("imageUrl", payload.imageUrl || "");
   formData.append("featured", payload.featured ? "true" : "false");
+  appendSeoToFormData(formData, payload.seo);
   if (payload.imageFile) {
     formData.append("image", payload.imageFile);
   }
@@ -186,6 +214,7 @@ export const createProcessedVideoApi = async (
   for (const tag of payload.tags || []) {
     formData.append("tags[]", tag);
   }
+  appendSeoToFormData(formData, payload.seo);
   formData.append("video", payload.videoFile);
   if (payload.thumbnailImageFile) {
     formData.append("thumbnailImage", payload.thumbnailImageFile);
@@ -213,6 +242,7 @@ export const updateVideoApi = async (
   for (const tag of payload.tags || []) {
     formData.append("tags[]", tag);
   }
+  appendSeoToFormData(formData, payload.seo);
   if (payload.thumbnailImageFile) {
     formData.append("thumbnailImage", payload.thumbnailImageFile);
   }
@@ -573,4 +603,238 @@ export const removeWatermarkLogoApi = async (): Promise<WatermarkSettings> => {
   }
   toast.success("Watermark logo removed");
   return data.watermark as WatermarkSettings;
+};
+
+export const getSeoSettingsApi = async (): Promise<SiteSeoSettings> => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/seo/admin`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Failed to load SEO settings");
+  return data.seo as SiteSeoSettings;
+};
+
+export const updateSeoSettingsApi = async (payload: Partial<SiteSeoSettings>) => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/seo`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to save SEO settings");
+    throw new Error(data.error || "Failed to save SEO settings");
+  }
+  toast.success("SEO settings saved");
+  return data.seo as SiteSeoSettings;
+};
+
+export const uploadSeoDefaultOgImageApi = async (file: File): Promise<SiteSeoSettings> => {
+  const formData = new FormData();
+  formData.append("ogImage", file);
+  const response = await fetch(`${BACKEND_URL}/api/settings/seo/og-image`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to upload default OG image");
+    throw new Error(data.error || "Failed to upload default OG image");
+  }
+  toast.success("Default OG image uploaded");
+  return data.seo as SiteSeoSettings;
+};
+
+export const removeSeoDefaultOgImageApi = async (): Promise<SiteSeoSettings> => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/seo/og-image`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to remove default OG image");
+    throw new Error(data.error || "Failed to remove default OG image");
+  }
+  toast.success("Default OG image removed");
+  return data.seo as SiteSeoSettings;
+};
+
+export const getSiteSettingsApi = async (): Promise<SiteBrandingSettings> => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/site/admin`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Failed to load site settings");
+  return data.site as SiteBrandingSettings;
+};
+
+export const updateSiteSettingsApi = async (payload: Partial<SiteBrandingSettings>) => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/site`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to save site settings");
+    throw new Error(data.error || "Failed to save site settings");
+  }
+  toast.success("Site settings saved");
+  return data.site as SiteBrandingSettings;
+};
+
+export const uploadSiteLogoApi = async (file: File): Promise<SiteBrandingSettings> => {
+  const formData = new FormData();
+  formData.append("logo", file);
+  const response = await fetch(`${BACKEND_URL}/api/settings/site/logo`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to upload site logo");
+    throw new Error(data.error || "Failed to upload site logo");
+  }
+  toast.success("Site logo uploaded");
+  return data.site as SiteBrandingSettings;
+};
+
+export const removeSiteLogoApi = async (): Promise<SiteBrandingSettings> => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/site/logo`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to remove site logo");
+    throw new Error(data.error || "Failed to remove site logo");
+  }
+  toast.success("Site logo removed");
+  return data.site as SiteBrandingSettings;
+};
+
+export const uploadSiteFaviconApi = async (file: File): Promise<SiteBrandingSettings> => {
+  const formData = new FormData();
+  formData.append("favicon", file);
+  const response = await fetch(`${BACKEND_URL}/api/settings/site/favicon`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to upload favicon");
+    throw new Error(data.error || "Failed to upload favicon");
+  }
+  toast.success("Favicon uploaded");
+  return data.site as SiteBrandingSettings;
+};
+
+export const removeSiteFaviconApi = async (): Promise<SiteBrandingSettings> => {
+  const response = await fetch(`${BACKEND_URL}/api/settings/site/favicon`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to remove favicon");
+    throw new Error(data.error || "Failed to remove favicon");
+  }
+  toast.success("Favicon removed");
+  return data.site as SiteBrandingSettings;
+};
+
+export const getPagesAdminApi = async (): Promise<CmsPage[]> => {
+  const response = await fetch(`${BACKEND_URL}/api/pages/admin/all`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to load pages");
+  return response.json();
+};
+
+export const getPageByIdAdminApi = async (id: string): Promise<CmsPage> => {
+  const response = await fetch(`${BACKEND_URL}/api/pages/admin/${id}`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to load page");
+  return response.json();
+};
+
+export const createPageApi = async (payload: {
+  title: string;
+  slug?: string;
+  path?: string;
+  content: string;
+  status: "published" | "draft";
+  seo?: SeoFieldsInput;
+}) => {
+  const formData = new FormData();
+  formData.append("title", payload.title);
+  formData.append("slug", payload.slug || "");
+  formData.append("path", payload.path || "");
+  formData.append("content", payload.content);
+  formData.append("status", payload.status);
+  appendSeoToFormData(formData, payload.seo);
+  const response = await fetch(`${BACKEND_URL}/api/pages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to create page");
+    throw new Error(data.error || "Failed to create page");
+  }
+  toast.success("Page created");
+  return data as CmsPage;
+};
+
+export const updatePageApi = async (
+  id: string,
+  payload: {
+    title: string;
+    slug?: string;
+    path?: string;
+    content: string;
+    status: "published" | "draft";
+    seo?: SeoFieldsInput;
+  }
+) => {
+  const formData = new FormData();
+  formData.append("title", payload.title);
+  formData.append("slug", payload.slug || "");
+  formData.append("path", payload.path || "");
+  formData.append("content", payload.content);
+  formData.append("status", payload.status);
+  appendSeoToFormData(formData, payload.seo);
+  const response = await fetch(`${BACKEND_URL}/api/pages/${id}`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${getAdminToken()}` },
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    toast.error(data.error || "Failed to update page");
+    throw new Error(data.error || "Failed to update page");
+  }
+  toast.success("Page updated");
+  return data as CmsPage;
+};
+
+export const deletePageApi = async (id: string) => {
+  const response = await fetch(`${BACKEND_URL}/api/pages/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!response.ok) {
+    toast.error("Failed to delete page");
+    throw new Error("Failed to delete page");
+  }
+  toast.success("Page deleted");
 };

@@ -36,12 +36,66 @@ export type AnalyticsSummary = {
   generatedAt: string;
 };
 
+export type SeoFields = {
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  noindex?: boolean;
+};
+
+export type SeoFieldsInput = SeoFields & {
+  ogImageFile?: File | null;
+};
+
+export type SiteSeoSettings = {
+  siteName: string;
+  defaultTitle: string;
+  defaultDescription: string;
+  defaultKeywords: string;
+  defaultOgImage: string;
+};
+
+export type SiteBrandingSettings = {
+  tagline: string;
+  logoUrl: string;
+  logoKey: string;
+  faviconUrl: string;
+  faviconKey: string;
+  footerAbout: string;
+  contactEmail: string;
+  supportEmail: string;
+};
+
+export type PublicSiteSettings = {
+  site: SiteBrandingSettings;
+  seo: SiteSeoSettings;
+};
+
+export type CmsPage = {
+  _id: string;
+  systemKey?: string;
+  isSystem?: boolean;
+  pageKind?: "content" | "meta-only";
+  title: string;
+  slug: string;
+  path: string;
+  content: string;
+  status: "published" | "draft";
+  seo?: SeoFields;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type Category = {
   _id: string;
   name: string;
   slug?: string;
   imageUrl: string;
   featured?: boolean;
+  seo?: SeoFields;
 };
 
 export type Video = {
@@ -80,6 +134,7 @@ export type Video = {
   healthStatus?: "online" | "offline" | "processing" | "unknown";
   healthCheckedAt?: string;
   healthMessage?: string;
+  seo?: SeoFields;
 };
 
 export type HealthMonitorSnapshot = {
@@ -178,6 +233,7 @@ export type VideoFormPayload = {
   categoryId?: string;
   status?: "public" | "private" | "draft";
   tags?: string[];
+  seo?: SeoFieldsInput;
 };
 
 export type ProcessedVideoUploadPayload = {
@@ -189,6 +245,7 @@ export type ProcessedVideoUploadPayload = {
   videoFile: File;
   status?: "public" | "private" | "draft";
   tags?: string[];
+  seo?: SeoFieldsInput;
 };
 
 export type VideoComment = {

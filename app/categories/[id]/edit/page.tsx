@@ -5,7 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import AdminShell from "../../../../components/AdminShell";
 import ProtectedRoute from "../../../../components/ProtectedRoute";
+import SeoFieldsSection, { emptySeoFields, seoFromRecord } from "../../../../components/SeoFieldsSection";
 import { getCategoriesApi, updateCategoryApi } from "../../../../lib/api";
+import { SeoFieldsInput } from "../../../../lib/types";
 
 const toSlug = (value: string) =>
   value
@@ -27,6 +29,7 @@ export default function EditCategoryPage() {
   const [featured, setFeatured] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [seo, setSeo] = useState<SeoFieldsInput>(emptySeoFields);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -43,6 +46,7 @@ export default function EditCategoryPage() {
         setSlug(category.slug || toSlug(category.name));
         setFeatured(Boolean(category.featured));
         setCurrentImageUrl(category.imageUrl || "");
+        setSeo(seoFromRecord(category.seo));
       } catch (_error) {
         setError("Failed to load category");
       }
@@ -55,7 +59,7 @@ export default function EditCategoryPage() {
     setError("");
     setLoading(true);
     try {
-      await updateCategoryApi(id, { name, slug, imageUrl: currentImageUrl || "", featured, imageFile });
+      await updateCategoryApi(id, { name, slug, imageUrl: currentImageUrl || "", featured, imageFile, seo });
       router.push("/categories");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Could not update category");
@@ -115,6 +119,12 @@ export default function EditCategoryPage() {
             />
             Feature this category on homepage (max 6)
           </label>
+          <SeoFieldsSection
+            value={seo}
+            onChange={setSeo}
+            fallbackTitle={name}
+            fallbackDescription={`Watch ${name} videos`}
+          />
           <button
             type="submit"
             disabled={loading}
